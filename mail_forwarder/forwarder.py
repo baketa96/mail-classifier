@@ -3,7 +3,7 @@ import requests
 import pprint
 
 getComponentsURL = "https://api.statuspage.io/v1/pages/n814cl79vp6c/components"
-headers = {"Authorization": "OAuth dc20ab8b-cb02-4fff-9374-e50635bb0e7c"}
+headers = {"Authorization": "OAuth auth token"}
 
 
 r = requests.get(url=getComponentsURL, headers=headers)
@@ -28,7 +28,7 @@ name = "Swedbank"
 componentId = components[name]
 
 postIncidentURL = "https://api.statuspage.io/v1/pages/n814cl79vp6c/incidents"
-headers = {"Authorization": "OAuth dc20ab8b-cb02-4fff-9374-e50635bb0e7c"}
+headers = {"Authorization": "OAuth auth token"}
 data = {
     "incident": {
         "name": "Bank Down",
