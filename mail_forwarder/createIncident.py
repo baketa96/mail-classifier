@@ -2,33 +2,65 @@ import json
 import requests
 import pprint
 from getComponents import getComponent
+import sys
+sys.path.append('../mail_tokenizer')
+import clasification
+import spacy
+import joblib
+import streamlit as st
+
+nlp = spacy.load('en_core_web_sm')
+
+st.set_page_config(layout="wide")
+
+def spacy_tokenizer(text):
+    tokens = nlp(text)
+    return [token.lemma_.lower() for token in tokens if not token.is_punct and not token.is_stop]
 
 
 
 components = getComponent()
 
-# match name from email tokenizer
+loaded_pipeline = joblib.load("/Users/aleksandar.bajceta/src/mail-classifier/classification_model.joblib")
 
 
-# would also need to map service provider names in order to match for example BEC, Bankdata and SDC
+def create_status_page(text):
+    result = clasification.predict(loaded_pipeline, text)
 
-name = "Swedbank"
-body = ""
+    if result == 0:
+        print('not creating')
+        return False
+    
+    return clasification.get_data(text[0])
 
-componentId = components[name]
 
-postIncidentURL = "https://api.statuspage.io/v1/pages/n814cl79vp6c/incidents"
-headers = {"Authorization": "OAuth bbc29e89-6274-4b68-9fa6-e10389a28685"}
-data = {
+def send_status(data):
+    if data == False:
+        return
+    name = data.get_bank_name()
+    body = data.get_product()
+    componentId = components[name]
+
+
+    postIncidentURL = "https://api.statuspage.io/v1/pages/DUMMYPAGE/incidents"
+    headers = {"Authorization": "OAuth dummyOne"}
+    data = {
     "incident": {
-        "name": name+" - Bank Down",
+        "name": name+" -  Major Outage affecting "+body,
         "status": "investigating",
         "body": body,
         "component_ids": [componentId],
+        }
     }
-}
+    r = requests.post(url=postIncidentURL, json=data, headers=headers)
 
 
-r = requests.post(url=postIncidentURL, json=data, headers=headers)
+st.write(""" # SNSSSPUA \n Simple not so smart status page update app """)
 
-#print(r.text)
+
+txt = st.text_area('Text to analyze', height=500)
+
+if st.button("Run analysis"):
+    print(txt)
+    send_status(create_status_page([txt]))
+
